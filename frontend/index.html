@@ -1,0 +1,502 @@
+<title>Gato ou Cachorro?</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+  rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          body: ['"IBM Plex Sans"', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* layout: hero band with a faint pixel-grid texture, then a two-column
+     main area — upload + result cards on the left, CNN pipeline aside on
+     the right — collapsing to one column on narrow screens */
+  :root {
+    --bg: #F2F5F7;
+    --surface: #FFFFFF;
+    --ink: #152431;
+    --ink-soft: #4C5C6B;
+    --line: #D7DFE6;
+    --teal: #0E6B5C;
+    --teal-soft: #E8F3F0;
+    --teal-strong: #0A5147;
+    --amber: #C97B1E;
+    --amber-soft: #FBF0E1;
+    --amber-strong: #A2630F;
+    --grid-line: rgba(21, 36, 49, 0.06);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F1720;
+      --surface: #17212C;
+      --ink: #E7EDF2;
+      --ink-soft: #92A6B6;
+      --line: #28333F;
+      --teal: #3FD2B6;
+      --teal-soft: #113A33;
+      --teal-strong: #5FE0C8;
+      --amber: #E8A33D;
+      --amber-soft: #3A2A14;
+      --amber-strong: #F0B65E;
+      --grid-line: rgba(231, 237, 242, 0.08);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0F1720;
+    --surface: #17212C;
+    --ink: #E7EDF2;
+    --ink-soft: #92A6B6;
+    --line: #28333F;
+    --teal: #3FD2B6;
+    --teal-soft: #113A33;
+    --teal-strong: #5FE0C8;
+    --amber: #E8A33D;
+    --amber-soft: #3A2A14;
+    --amber-strong: #F0B65E;
+    --grid-line: rgba(231, 237, 242, 0.08);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .kernel-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .text-soft {
+    color: var(--ink-soft);
+  }
+
+  .text-accent {
+    color: var(--teal-strong);
+  }
+
+  .border-hair {
+    border-color: var(--line);
+  }
+
+  .inline-code {
+    background: var(--bg);
+  }
+
+  .badge-cat {
+    background: var(--teal-soft);
+    color: var(--teal-strong);
+  }
+
+  .badge-dog {
+    background: var(--amber-soft);
+    color: var(--amber-strong);
+  }
+
+  .step-num {
+    background: var(--teal-soft);
+    color: var(--teal-strong);
+  }
+
+  .btn-primary {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--teal-strong);
+  }
+
+  .btn-primary:disabled {
+    background: var(--line);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--teal-strong);
+    outline-offset: 2px;
+  }
+
+  .link-reset {
+    color: var(--ink-soft);
+  }
+
+  .link-reset:hover {
+    color: var(--ink);
+  }
+
+  .dropzone {
+    border: 2px dashed var(--line);
+    transition: border-color 0.2s ease;
+  }
+
+  .dropzone:hover,
+  .dropzone.drag-active {
+    border-color: var(--teal);
+  }
+
+  .dropzone:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+
+  .bar-track {
+    background: var(--line);
+  }
+
+  .bar-fill-cat {
+    background: var(--teal);
+  }
+
+  .bar-fill-dog {
+    background: var(--amber);
+  }
+
+  .confidence-bar {
+    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .error-box {
+    background: var(--amber-soft);
+    color: var(--amber-strong);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .confidence-bar {
+      transition: none;
+    }
+
+    .spin-slow {
+      animation: none !important;
+    }
+  }
+</style>
+
+<body class="font-body antialiased">
+
+  <header class="relative overflow-hidden border-b border-hair">
+    <div class="absolute inset-0 kernel-grid [mask-image:linear-gradient(to_bottom,black,transparent)]"></div>
+    <div class="relative max-w-5xl mx-auto px-6 pt-14 pb-12 md:pt-20 md:pb-16">
+      <div class="flex items-center gap-2 text-accent">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 16c-3 0-5.5-1.8-5.5-4.5S9 7 12 7s5.5 1.8 5.5 4.5S15 16 12 16Z" />
+          <path d="M8.5 7.2 7.3 4.6M15.5 7.2l1.2-2.6M5.8 9.5 3.4 8.3M18.2 9.5l2.4-1.2" />
+        </svg>
+        <span class="font-mono text-sm tracking-tight">rede convolucional</span>
+      </div>
+      <h1 class="font-display font-semibold text-4xl md:text-5xl mt-4 max-w-xl leading-tight"
+        style="text-wrap: balance;">
+        Gato ou cachorro?
+      </h1>
+      <p class="mt-4 text-soft max-w-md text-[15px] leading-relaxed">
+        Envie uma foto e deixe a rede convolucional classificar o animal, com o nível de confiança da previsão.
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-[1.1fr_0.9fr] gap-8">
+
+    <section class="space-y-6 min-w-0">
+
+      <div class="surface rounded-2xl p-5 md:p-6">
+        <h2 class="font-display font-semibold text-lg">Imagem</h2>
+
+        <div id="dropzone" tabindex="0" role="button" aria-label="Selecionar imagem para classificar"
+          class="dropzone mt-4 relative flex flex-col items-center justify-center text-center rounded-xl cursor-pointer min-h-[260px] overflow-hidden">
+          <input id="fileInput" type="file" accept="image/*" class="hidden" />
+
+          <div id="dropzoneEmpty" class="px-6 py-10">
+            <svg class="mx-auto text-soft" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 16V4M12 4 7.5 8.5M12 4l4.5 4.5" />
+              <path d="M5 16v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <p class="mt-3 text-sm font-medium">Arraste uma imagem ou clique para escolher</p>
+            <p class="mt-1 text-xs text-soft">JPG ou PNG, de preferência com o animal bem enquadrado</p>
+          </div>
+
+          <img id="previewImg" alt="Pré-visualização da imagem selecionada"
+            class="hidden w-full h-full max-h-[320px] object-contain p-3" />
+        </div>
+
+        <div class="mt-5 flex items-center gap-3">
+          <button id="classifyBtn" disabled
+            class="btn-primary inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium px-5 py-2.5 transition-colors">
+            <svg id="btnSpinner" class="hidden spin-slow animate-spin" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-9-9" />
+            </svg>
+            <span id="btnLabel">Classificar imagem</span>
+          </button>
+
+          <button id="resetBtn" class="link-reset hidden text-sm font-medium transition-colors">
+            Trocar imagem
+          </button>
+        </div>
+
+        <p class="mt-3 text-xs text-soft font-mono">
+          endpoint: <span id="apiUrlLabel"></span>
+        </p>
+      </div>
+
+      <div class="surface rounded-2xl p-5 md:p-6 min-h-[132px]">
+        <h2 class="font-display font-semibold text-lg">Resultado</h2>
+
+        <div id="resultEmpty" class="mt-3 text-sm text-soft">
+          Envie uma imagem para ver a classificação aqui.
+        </div>
+
+        <div id="resultContent" class="hidden mt-4">
+          <div class="flex items-center justify-between gap-3">
+            <span id="resultLabel" class="font-display font-semibold text-2xl"></span>
+            <span id="resultBadge" class="text-xs font-medium px-2.5 py-1 rounded-full"></span>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center justify-between text-xs text-soft mb-1.5">
+              <span>Confiança do modelo</span>
+              <span id="resultPercent" class="font-mono" style="font-variant-numeric: tabular-nums;"></span>
+            </div>
+            <div class="bar-track h-2 rounded-full overflow-hidden">
+              <div id="confidenceBar" class="confidence-bar bar-fill-cat h-full w-0 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="resultError" class="error-box hidden mt-4 flex gap-2.5 text-sm rounded-lg px-3.5 py-3">
+          <svg class="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 9v4M12 16.5v.01" />
+            <path
+              d="M10.3 3.9 2.6 17.3a1.8 1.8 0 0 0 1.6 2.7h15.6a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
+          </svg>
+          <span id="resultErrorText"></span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="surface rounded-2xl p-5 md:p-6 h-fit min-w-0">
+      <h2 class="font-display font-semibold text-lg">Como a rede decide</h2>
+      <ol class="mt-5 space-y-5">
+        <li class="flex gap-3.5">
+          <span
+            class="step-num shrink-0 w-6 h-6 rounded-full text-xs font-mono flex items-center justify-center">1</span>
+          <div>
+            <p class="text-sm font-medium">Entrada da imagem</p>
+            <p class="text-sm text-soft mt-0.5">A foto é redimensionada e normalizada antes de entrar na rede.</p>
+          </div>
+        </li>
+        <li class="flex gap-3.5">
+          <span
+            class="step-num shrink-0 w-6 h-6 rounded-full text-xs font-mono flex items-center justify-center">2</span>
+          <div>
+            <p class="text-sm font-medium">Blocos convolucionais</p>
+            <p class="text-sm text-soft mt-0.5">Filtros aprendem bordas, texturas e formas em camadas sucessivas.</p>
+          </div>
+        </li>
+        <li class="flex gap-3.5">
+          <span
+            class="step-num shrink-0 w-6 h-6 rounded-full text-xs font-mono flex items-center justify-center">3</span>
+          <div>
+            <p class="text-sm font-medium">Classificação final</p>
+            <p class="text-sm text-soft mt-0.5">Uma camada densa com softmax escolhe entre gato e cachorro.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="mt-6 pt-5 border-t border-hair">
+        <p class="text-xs text-soft leading-relaxed">
+          Este frontend espera um backend que receba a imagem em <code
+            class="inline-code font-mono px-1 py-0.5 rounded">multipart/form-data</code>
+          e responda em JSON com <code class="inline-code font-mono px-1 py-0.5 rounded">label</code> e <code
+            class="inline-code font-mono px-1 py-0.5 rounded">confidence</code>.
+        </p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Ajuste este endpoint para o backend que serve o seu modelo (Flask, FastAPI, Cloud Run, etc.).
+    // Contrato esperado da resposta: { "label": "gato" | "cachorro", "confidence": 0.0 a 1.0 }
+    const API_URL = 'http://localhost:8000/predict';
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const dropzoneEmpty = document.getElementById('dropzoneEmpty');
+    const previewImg = document.getElementById('previewImg');
+    const classifyBtn = document.getElementById('classifyBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const resetBtn = document.getElementById('resetBtn');
+    const apiUrlLabel = document.getElementById('apiUrlLabel');
+
+    const resultEmpty = document.getElementById('resultEmpty');
+    const resultContent = document.getElementById('resultContent');
+    const resultError = document.getElementById('resultError');
+    const resultErrorText = document.getElementById('resultErrorText');
+    const resultLabel = document.getElementById('resultLabel');
+    const resultBadge = document.getElementById('resultBadge');
+    const resultPercent = document.getElementById('resultPercent');
+    const confidenceBar = document.getElementById('confidenceBar');
+
+    apiUrlLabel.textContent = API_URL;
+
+    let selectedFile = null;
+
+    function openFilePicker() {
+      fileInput.click();
+    }
+    dropzone.addEventListener('click', openFilePicker);
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openFilePicker();
+      }
+    });
+
+    ['dragover', 'dragenter'].forEach((evt) =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('drag-active');
+      })
+    );
+    ['dragleave', 'dragend'].forEach((evt) =>
+      dropzone.addEventListener(evt, () => dropzone.classList.remove('drag-active'))
+    );
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-active');
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showError('Esse arquivo não parece ser uma imagem. Escolha um JPG ou PNG.');
+        return;
+      }
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.classList.remove('hidden');
+        dropzoneEmpty.classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+
+      classifyBtn.disabled = false;
+      resetBtn.classList.remove('hidden');
+      hideResult();
+    }
+
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectedFile = null;
+      fileInput.value = '';
+      previewImg.src = '';
+      previewImg.classList.add('hidden');
+      dropzoneEmpty.classList.remove('hidden');
+      classifyBtn.disabled = true;
+      resetBtn.classList.add('hidden');
+      hideResult();
+    });
+
+    classifyBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      setLoading(true);
+      hideResult();
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const response = await fetch(API_URL, { method: 'POST', body: formData });
+        if (!response.ok) throw new Error('status ' + response.status);
+
+        const data = await response.json();
+        showResult(data.label, data.confidence);
+      } catch (err) {
+        showError(
+          'Não foi possível falar com o modelo. Verifique se a API está rodando em ' +
+          API_URL +
+          ' (ajuste o valor de API_URL no código).'
+        );
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function setLoading(isLoading) {
+      classifyBtn.disabled = isLoading || !selectedFile;
+      btnSpinner.classList.toggle('hidden', !isLoading);
+      btnLabel.textContent = isLoading ? 'Classificando…' : 'Classificar imagem';
+    }
+
+    function hideResult() {
+      resultEmpty.classList.remove('hidden');
+      resultContent.classList.add('hidden');
+      resultError.classList.add('hidden');
+      confidenceBar.style.width = '0%';
+    }
+
+    function showResult(rawLabel, confidence) {
+      const isCat = String(rawLabel).toLowerCase().startsWith('gato') || String(rawLabel).toLowerCase().startsWith('cat');
+      const label = isCat ? 'Gato' : 'Cachorro';
+      const pct = Math.round((confidence ?? 0) * 100);
+
+      resultEmpty.classList.add('hidden');
+      resultError.classList.add('hidden');
+      resultContent.classList.remove('hidden');
+
+      resultLabel.textContent = label;
+      resultPercent.textContent = pct + '%';
+
+      resultBadge.textContent = isCat ? 'classe: gato' : 'classe: cachorro';
+      resultBadge.className = 'text-xs font-medium px-2.5 py-1 rounded-full ' + (isCat ? 'badge-cat' : 'badge-dog');
+
+      confidenceBar.className = 'confidence-bar h-full rounded-full ' + (isCat ? 'bar-fill-cat' : 'bar-fill-dog');
+
+      requestAnimationFrame(() => {
+        confidenceBar.style.width = pct + '%';
+      });
+    }
+
+    function showError(message) {
+      resultEmpty.classList.add('hidden');
+      resultContent.classList.add('hidden');
+      resultError.classList.remove('hidden');
+      resultErrorText.textContent = message;
+    }
+  </script>
+</body>

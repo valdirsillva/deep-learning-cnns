@@ -202,7 +202,7 @@
 
   <header class="relative overflow-hidden border-b border-hair">
     <div class="absolute inset-0 kernel-grid [mask-image:linear-gradient(to_bottom,black,transparent)]"></div>
-    <div class="relative max-w-5xl mx-auto px-6 pt-14 pb-12 md:pt-20 md:pb-16">
+    <div class="relative max-w-5xl mx-auto px-6 pt-12  md:pt-12 md:pb-10">
       <div class="flex items-center gap-2 text-accent">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -215,13 +215,13 @@
         style="text-wrap: balance;">
         Gato ou cachorro?
       </h1>
-      <p class="mt-4 text-soft max-w-md text-[15px] leading-relaxed">
+      <p class="mt-2 text-soft max-w-md text-[15px] leading-relaxed">
         Envie uma foto e deixe a rede convolucional classificar o animal, com o nível de confiança da previsão.
       </p>
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-[1.1fr_0.9fr] gap-8">
+  <main class="max-w-5xl mx-auto px-6 py-4 grid md:grid-cols-[1.1fr_0.9fr] gap-8">
 
     <section class="space-y-6 min-w-0">
 
@@ -344,7 +344,7 @@
   <script>
     // Ajuste este endpoint para o backend que serve o seu modelo (Flask, FastAPI, Cloud Run, etc.).
     // Contrato esperado da resposta: { "label": "gato" | "cachorro", "confidence": 0.0 a 1.0 }
-    const API_URL = 'http://localhost:8000/predict';
+    const API_URL = 'http://localhost:8000/api/v1/predict';
 
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
@@ -471,6 +471,7 @@
     }
 
     function showResult(rawLabel, confidence) {
+      console.log('rawLabel:', rawLabel, 'confidence:', confidence);
       const isCat = String(rawLabel).toLowerCase().startsWith('gato') || String(rawLabel).toLowerCase().startsWith('cat');
       const label = isCat ? 'Gato' : 'Cachorro';
       const pct = Math.round((confidence ?? 0) * 100);
